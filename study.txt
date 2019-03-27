@@ -461,11 +461,11 @@ LTE                     ;
 LT                      ;
 EQ                      ;
 NEQ                     ;
-CALL            L1      ;_ _ return_value p2 p1 | ==> _ _ return_value p2 p1 return_value NEXT(this_inst) FP reserverd1 |
+CALL            L1      ;_ _ return_value p2 p1 | ==> _ _ return_value p2 p1 NEXT(this_inst) FP reserverd1 |
                           FP = SP
-RET                     ;_ _ return_value p2 p1 return_value NEXT(this_inst) FP reserverd1 | ==> _ _ return_value |
+RET                     ;_ _ return_value p2 p1 NEXT(this_inst) FP reserverd1 | ==> _ _ return_value |
                           recover the next instruction and FP
-RETN                    ;_ _ return_value ... p2 p1 CNT return_value NEXT(this_inst) FP reserverd1 | ==> _ _ return_value |
+RETN                    ;_ _ return_value ... p2 p1 CNT NEXT(this_inst) FP reserverd1 | ==> _ _ return_value |
 ALC             3       ;_ _ | ==> _ _ _ _ _ |
 DALC            1       ;_ _ _ | ==> _ _ |
 
@@ -652,8 +652,81 @@ INT test() {
 
 ############################################################
 
+CNT | P1 P2 P3...
+    |
+    array or struct
 
 
+_ _ return_value ... p2 p1 CNT NEXT(this_inst) FP reserverd1 |
+
+int<ArrayAddress> array_ctor(int cnt, ...) {
+    int c = *(FP+3);        // c  [-1]
+    int tmp = malloc(sizeof(INT)*(1+CNT));  // tmp [-2]
+
+    while (c >= 0) {
+        tmp[c] = *(FP+3+c);
+        c = c-1;
+    }
+    return tmp; // *(FP+3+cnt+1) = tmp+1;
+}
+
+
+FLAB  ARRAY_CTOR:
+        ALC     2
+        LOV     3
+        LOA     -1
+        STO
+        ALC     1
+        LOC     4
+        LOC     1
+        LOV     3
+        ADD
+        MPI
+        CALL    MALLOC
+        LOA     -2
+        STO
+LAB  L1:
+        LOV     -1
+        LOC     0
+        GTE
+        CJMP    L2
+        LOC     3
+        LOV     -1
+        ADD
+        IND     0
+        LOV     -2
+        LOV     -1
+        ADD
+        STO
+        LOV     -1
+        LOC     1
+        SUB
+        LOA     -1
+        STO
+        JMP     L1
+LAB  L2:
+        LOV     -2
+        LOC     1
+        ADD
+        LOC     4
+        LOV     3
+        ADD
+        STO
+        RET
+
+
+int Length(T[] t) {
+    return *(t-1);
+}
+
+FLAB    LENGTH:
+    LOV     3
+    LOC     1
+    SUB
+    IND
+    LOA     4
+    STO
+    RET
 
 
 
