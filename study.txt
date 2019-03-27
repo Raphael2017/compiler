@@ -1,0 +1,683 @@
+ESP：栈指针寄存器(extended stack pointer)，其内存放着一个指针，该指针永远指向系统栈最上面一个栈帧的栈顶。
+EBP：基址指针寄存器(extended base pointer)，其内存放着一个指针，该指针永远指向系统栈最上面一个栈帧的底部。
+
+void swap(int * a, int *b)
+{
+  int c;
+  c = *a; *a = *b; *b = c;
+}
+
+int main()
+{
+   int a, b;
+   a = 16; b = 32;
+   swap(&a, &b);
+   return (a - b);
+}
+
+.text
+ _swap:
+  pushl %ebp  # 保存原ebp值，设置当前函数的帧指针。
+  movl %esp,%ebp
+  subl $4,%esp  # 为局部变量c在栈内分配空间。
+  movl 8(%ebp),%eax   # 取函数第1个参数，该参数是一个整数类型值的指针。
+  movl (%eax),%ecx # 取该指针所指位置的内容，并保存到局部变量c中。
+  movl %ecx,-4(%ebp)
+  movl 8(%ebp),%eax # 再次取第1个参数，然后取第2个参数。
+  movl 12(%ebp),%edx
+  movl (%edx),%ecx  # 把第2个参数所指内容放到第1个参数所指的位置。
+  movl %ecx,(%eax)
+  movl 12(%ebp),%eax   # 再次取第2个参数。
+  movl -4(%ebp),%ecx   # 然后把局部变量c中的内容放到这个指针所指位置处。
+  movl %ecx,(%eax)
+  leave   # 恢复原ebp、esp值（即movl %ebp,%esp; popl %ebp;）。
+  ret
+ _main:
+  pushl %ebp    # 保存原ebp值，设置当前函数的帧指针。
+  movl %esp,%ebp
+  subl $8,%esp # 为整型局部变量a和b在栈中分配空间。
+  movl $16,-4(%ebp) # 为局部变量赋初值（a=16，b=32）。
+  movl $32,-8(%ebp)
+  leal -8(%ebp),%eax # 为调用swap()函数作准备，取局部变量b的地址，
+  pushl %eax # 作为调用的参数并压入栈中。即先压入第2个参数。
+  leal -4(%ebp),%eax   # 再取局部变量a的地址，作为第1个参数入栈。
+  pushl %eax
+  call _swap # 调用函数swap()。
+  movl -4(%ebp),%eax # 取第1个局部变量a的值，减去第2个变量b的值。
+  subl -8(%ebp),%eax
+  leave # 恢复原ebp、esp值（即movl %ebp,%esp; popl %ebp;）。
+  ret
+
+标号：标号(ＬＡＢＥＬ)是为一组机器指令所起名字
+
+function()
+    local i = 10
+    function()
+        function()
+            i = i+1
+        end
+    end
+end
+
+// Table type mapping labels to information
+typedef struct TAB_table_ *TL_table;
+typedef S_symbol Temp_label;
+struct Temp_temp_ {int num;};
+
+Temp_label Symbol
+struct Temp_map_ {TAB_table tab; Temp_map under;};
+
+struct Tr_access_ {
+	Tr_level level;
+	F_access access;
+};
+
+struct Tr_level_ {
+	Tr_level parent;
+	Temp_label name;
+	F_frame frame;
+	Tr_accessList formals;
+};
+
+struct F_frame_ {
+	Temp_label name;
+	F_accessList formals;
+	int local_count;
+	/* instructions required to implement the "view shift" needed */
+};
+
+struct F_access_ {
+	enum { inFrame, inReg } kind;
+	union {
+		int offset; /* inFrame */
+		Temp_temp reg; /* inReg */
+	} u;
+};
+
+common
+
+AX
+BX
+CX
+DX
+
+
+
+CS
+DS
+SS
+ES      //extra segment reg
+
+
+8086CPU
+
+byte=8*bit
+word=2*byte
+
+mov ax,18       AX=18
+mov ah,78       AH=78
+add ax,8        AX=AX+8
+mov ax,bx       AX=BX
+add as,bx       AX=AX+BX
+
+move al 2
+add al al
+add al al
+add al al
+
+
+CS IP
+CS    M         Instructions Segment address
+
+IP    N         Offset
+
+  <--- M*16+N
+
+jmp segment:offset
+jmp 2AE3:3      <CS:2AE3H,IP:0003H>
+jmp ax          <CS:keep same, IP:ax>   mov IP as
+
+Cmd Segment
+
+
+debug
+//operate register
+-r view register
+-r <register_name> edit register
+
+
+//operate memory
+-d    view memory
+-e    edit memory
+-u    view memory as instructions
+-T    execute CS:IP
+-a    edit memory as instructions
+
+b8 01 00(mov ax,0001)
+
+DS      Data Segment address  8086CPU
+
+// memory -> register
+mov bx,1000H
+mov ds,bx
+mov al,[0]              // al <BYTE mov>
+mov bx,[0]              // bx <WORD mov>
+
+
+// memory -> register
+mov bx,1000H
+mov ds,bx
+mov [0],al
+
+mov,add,sub
+
+<mov dst,src>
+
+mov reg,data
+mov reg,reg
+mov reg,[...]
+mov [...].reg
+mov seg_reg, reg    // in 8086CPU mov DS 1000H is not allowed
+mov reg, seg_reg
+
+0000:0020 A5 7E 00 F8 87 E9 00 F0-0A C0 00 F0 0B C0 00 F0
+
+mov ax,6622
+jmp 0ff0:0100       // jump 10000H
+mov ax,2000
+mov ds,ax
+mov ax,[0008]
+mov ax,[0002]
+
+
+stack
+push/pop        // stack operate is always by word
+
+SS  SP      -> stack top    8086cpu can not protect stack space boundary
+
+push reg    -> SUB SP 2,mov [SP],reg
+push [...]
+
+pop reg     -> mov reg,[SP],add SP 2
+pop [...]
+
+<CS,IP>     // inst location
+
+<DS,[...]>  // memory location
+
+<SS,SP>     // stack top
+
+
+CS DS SS ES // segment reg
+
+return
+mov ax,4C00
+int 21
+
+<edit> -> l.asm -> <compile> l.obj -> <link> l.exe -> <load>
+-> instructions in memory -> <run>
+
+[bx]
+
+loop
+
+// for convenience use (T) -> T's value
+//                 idata   -> 0,1,2   const
+
+-G  goto
+
+mov word ptr ds:[0],1
+mov byte ptr ds:[0],1
+
+db define byte
+dw define word
+
+jmp short XX  <in segment>
+jmp far   XX  <cross segment>
+
+emit(AS_Move(String_format("mov [`s0 + %d],`s1\n", n), NULL, TL(munchExp(e1), TL(munchExp(e2), NULL))));
+
+
+10100001 00010000 00000000
+
+10001011 01000000 00000001
+
+10111011 00000000 00010000
+
+10001010 01000000 00000001
+
+10100000 00000000 00010000
+
+<control chain>    is a fp chain, fp is to real param and local variable
+<return address>   is the next instruction by the call
+
+< Function nesting > + <  Return function  > => < high order function > cannot use stack to store all local variable
+
+
+
+register: FP SP
+
+LOAD_CONSTANT            2                         PUSH(2)
+LOAD_VARIABLE            offset                    PUSH(MEM(FP+offset))
+INTEGER_BINARY_OPERATION op                        r=POP;l=POP;PUSH(l op r)
+LOAD_ADDRESS             offset                    PUSH(FP+offset)
+STORE                                              offset=POP; MEM(FP+offset) = POP
+STORE_NO                                           value remain in top of stack
+LABEL                    L%d
+CONDITION_JUMP           L%d                       condition=POP; if(0==POP) JUMP TO L%d
+JUMP                     L%d
+INDIRECT_LOAD            3                         base_addr=POP; PUSH MEM(FP+base_addr+3)
+STOP
+
+
+
+
+
+{
+    int x = 3;
+    if (0<x)
+    {
+        int fact = 1;
+        do
+        {
+            fact = fact*x;
+            x = x-1;
+        }
+        while(x!=0);
+    }
+}
+
+SP = SP+1                               ; declare x offset -5
+LOAD_CONSTANT               3           ; load 3
+LOAD_CONSTANT               1           ; x size 1
+LOAD_ADDRESS                -5          ; load address of x
+STORE                                   ; x=3
+LOAD_CONSTANT               0           ; load 0
+LOAD_VARIABLE               -5,1        ; load x
+INTEGER_BINARY_OPERATION    <           ; 0<x
+CONDITION_JUMP              L1          ;
+SP=SP+1                                 ; declare fact offset -6
+LOAD_CONSTANT               1           ;
+LOAD_CONSTANT               1           ;
+LOAD_ADDRESS                -6;         ;
+STORE                                   ; fact=1
+LABEL                       L2          ;
+LOAD_VARIABLE               -6          ; load fact
+LOAD_VARIABLE               -5          ; load x
+INTEGER_BINARY_OPERATION    *           ; fact*x
+LOAD_CONSTANT               1           ;
+LOAD_ADDRESS                -6          ;
+STORE                                   ; fact = fact*x
+LOAD_VARIABLE               -5          ;
+LOAD_CONSTANT               1           ;
+INTEGER_BINARY_OPERATION    -           ; x-1
+LOAD_CONSTANT               1           ;
+LOAD_ADDRESS                -5          ;
+STORE
+LOAD_VARIABLE               -5          ;
+LOAD_CONSTANT               0           ;
+INTEGER_BINARY_OPERATION    ==          ;
+CONDITION_JUMP              L2          ;
+SP=SP-1                                 ; destroy fact
+LABEL                       L1          ;
+SP=SP-1                                 ; destroy x
+
+
+{
+    d = (x * (y-z))/(d-i=(i+1)) +1;
+}
+
+                 +
+             /      \
+            #        1
+         /     \
+        *       -
+       / \     / \
+      x   -   d    =
+         / \      / \
+        y   z    i   +
+                    / \
+                   i   1
+
+
+d   ; offset d0
+x   ; offset x0
+y   ; offset y0
+z   ; offset z0
+i   ; offset i0
+
+LOAD_VARIABLE              x0           ;
+LOAD_VARIABLE              y0           ;
+LOAD_VARIABLE              z0           ;
+INTEGER_BINARY_OPERATION   -            ;
+INTEGER_BINARY_OPERATION   *            ;
+LOAD_VARIABLE              d0           ;
+LOAD_VARIABLE              i0           ;
+LOAD_CONSTANT              1            ;
+INTEGER_BINARY_OPERATION   +            ;
+LOAD_CONSTANT              1            ;
+LOAD_ADDRESS               i0           ;
+STORE                                   ;
+LOAD_VARIABLE              i0           ;
+INTEGER_BINARY_OPERATION   -            ;
+INTEGER_BINARY_OPERATION   /            ;
+LOAD_CONSTANT              1            ;
+INTEGER_BINARY_OPERATION   +            ;
+LOAD_CONSTANT              1            ;
+LOAD_ADDRESS               d0           ;
+STORE                                   ;
+
+
+
+{
+    a = (m>3) && (m<n);
+    if (m>3)
+       m < n
+    else
+       false;
+}
+
+LOAD_VARIABLE             m0            ;
+LOAD_CONSTANT             3             ;
+INTEGER_BINARY_OPERATION  >             ;
+CONDITION_JUMP            L1            ;
+LOAD_VARIABLE             m0            ;
+LOAD_VARIABLE             n0            ;
+INTEGER_BINARY_OPERATION  <             ;
+CONDITION_JUMP            L2            ;
+LABEL                     L1            ;
+LOAD_CONSTANT             0             ;
+LABEL                     L2            ;
+LOAD
+
+
+{
+    a = (m>3) || (m<n) && (m<(m*n));
+}
+
+             or
+         /        \
+       >          and
+      / \       /     \
+     m   3     <       <
+              / \     / \
+             m   n   m   *
+                        / \
+                       m   n
+
+{
+    int[3] a;
+
+    a[i] = a[i] + b;
+}
+
+
+{
+    struct Lesson {
+        int time_;
+        string name_;
+    };
+
+    struct Student {
+        int age_;
+        int score_;
+        Lesson[15] lessons_;
+    };
+
+    void main() {
+        Student stu;
+        stu.lessons_[2];
+        stu.lessons_[1].time = stu.lessons_[0].time + 100;
+    }
+}
+
+
+///////////////////////////////////////////////////////////
+
+FP SP
+
+stack unit is INT
+_ _ _ _ xxx yyy | is a description of stack
+
+LOC             12      ; _ _ _ _ | ==> _ _ _ _ 12 |
+LOA      offset(-5)     ; _ _ _ _ | ==> _ _ _ _ FP+offset
+STO                     ; _ _ _ _ data(12) addr(10) | ==> _ _ _ _ |
+                          MEM(addr) = 12
+LOV      offset(-5)     ; _ _ _ _ | -> _ _ _ _ MEM(FP+offset) |   means: LOA offset; IND 0;
+STN                     ; _ _ _ _ data(12) addr(5) | ==> _ _ _ _ data(12)
+                          MEM(addr) = 12
+LAB             L1      ;
+JMP             L1      ;
+CJMP            L1      ; _ _ _ _ data(12) | ==> _ _ _ _ |
+                          IF(data(12)==0) JMP L1
+IND             3       ; _ _ _ _ 12 | ==> _ _ _ _ MEM(12+3)
+ADD                     ; _ _ _ _ l r | ==> _ _ _ _ l+r |
+SUB                     ; _ _ _ _ l r | ==> _ _ _ _ l-r |
+MPI                     ; _ _ _ _ l r | ==> _ _ _ _ l*r |
+DIV                     ; _ _ _ _ l r | ==> _ _ _ _ l/r |
+GT                      ;
+GTE                     ;
+LTE                     ;
+LT                      ;
+EQ                      ;
+NEQ                     ;
+CALL            L1      ;_ _ return_value p2 p1 | ==> _ _ return_value p2 p1 return_value NEXT(this_inst) FP reserverd1 |
+                          FP = SP
+RET                     ;_ _ return_value p2 p1 return_value NEXT(this_inst) FP reserverd1 | ==> _ _ return_value |
+                          recover the next instruction and FP
+RETN                    ;_ _ return_value ... p2 p1 CNT return_value NEXT(this_inst) FP reserverd1 | ==> _ _ return_value |
+ALC             3       ;_ _ | ==> _ _ _ _ _ |
+DALC            1       ;_ _ _ | ==> _ _ |
+
+////////////////////////////////////////////////////////////
+
+############################################################
+
+    d = (x * (y-z))/(d-i=(i+1)) +1;
+
+                 +
+             /      \
+            #        1
+         /     \
+        *       -
+       / \     / \
+      x   -   d    =
+         / \      / \
+        y   z    i   +
+                    / \
+                   i   1
+
+LOV             X0;
+LOV             Y0;
+LOV             Z0;
+SUB               ;
+MPI               ;
+LOV             D0;
+LOV             I0;
+LOC              1;
+ADD               ;
+LOA             I0;
+STN               ;
+SUB               ;
+DIV               ;
+LOC              1;
+ADD               ;
+LOA             D0;
+STO               ;
+############################################################
+
+############################################################
+
+    a = (m>3) && (m<n);
+
+LOV             M0;
+LOC              3;
+GT               ;
+CJMP            L1;
+LOV             M0;
+LOV             N0;
+LT                ;
+JMP             L2;
+LAB             L1;
+LOC              0;
+LAB             L2;
+############################################################
+
+############################################################
+
+    a = (m>3) || (m<n);
+
+LOV             M0;
+LOC              3;
+GT                ;
+CJMP            L1;
+LOC              1;
+JMP             L2;
+LAB             L1;
+LOV             M0;
+LOV             N0;
+LT                ;
+LAB             L2;
+LOA             A0;
+STO               ;
+############################################################
+
+############################################################
+
+ARRAY IN MEM    [SIZE][ELEM0][ELEM1][EMEM2]...
+    int[3] a; int b;
+    a[i+j] = a[j-i];
+
+LOV             A0;     load array base address
+LOV             J0;
+LOV             I0;
+SUB               ;
+ADD               ;
+IND              1;     skip [SIZE]
+LOV             A0;
+LOV             I0;
+LOV             J0;
+ADD               ;
+ADD               ;
+STO               ;
+############################################################
+
+############################################################
+STRUCT IN MEM   [FIELD0][FIELD1][FIELD2]
+    struct Lesson {
+        int time_;
+        string name_;
+    };
+
+    struct Student {
+        int age_;
+        int score_;
+        Lesson[15] lessons_;
+    };
+
+    void main() {
+        Student s;
+        s.lessons_[3].time = s.lessons_[0].time + 100;
+    }
+
+LOV         S0;
+IND          2;
+IND          1;  0+1
+IND          0;
+LOC        100;
+ADD           ;
+LOV         S0;
+IND          2;
+IND          1;
+LOC          0;
+ADD           ;
+STO           ;
+############################################################
+
+
+############################################################
+
+CALL            L1      ;_ _ return_value p2 p1 | ==> _ _ return_value p2 p1  NEXT(this_inst) FP reserverd1 |
+                          FP = SP
+RET                     ;_ _ return_value p2 p1  NEXT(this_inst) FP reserverd1 | ==> _ _ return_value |
+                          recover the next instruction and FP
+
+INIT_RECORD (CNT, ...) {
+    INT i=CNT;
+    RECORD p=ALLOC(SIZE);
+    WHILE (i > 0) {
+        p[i]=FP[4+i];
+        i=i-1;
+    }
+}
+
+
+
+############################################################
+
+INT test() {
+    INT a = 0;
+    STRING s = 'asd';
+    if (a < 0) {
+        INT m=10;
+        a = a+m*m;
+    }
+}
+
+
+############################################################
+
+    struct Lesson {
+        int time_;
+        string name_;
+    };
+
+    struct Student {
+        string name_;
+        int age_;
+        Lesson[] lessons_;
+    };
+
+    Student test(Student s, int m) {
+        s.lessons_[3].time = s.lessons_[0].time + m;
+        return s;
+    }
+
+    void main() {
+        Student s = Student{"zhangsan", 18, Lesson[]{ Lesson{4, "MATH"}, Lesson{5, "ENGLISH"} } };
+    }
+
+
+
+
+############################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
