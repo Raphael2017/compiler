@@ -11,6 +11,7 @@
 
 #define INT_TP          "<INT>"
 #define STRING_TP       "<STRING>"
+#define CTOR_FUNC       "<CTOR>"
 
 struct TranslateExp {
     TypeInfo *type_;
@@ -122,6 +123,7 @@ bool TypeInfoEqual(TypeInfo *type1, TypeInfo *type2) {
 void access_local_or_global(Access* ac, bool flag/* false means value */);
 SyntaxExpsList* params_list_reverse(SyntaxExpsList *exps);
 TypeInfoList* param_types_list_reverse(TypeInfoList* tps);
+TypeFieldTypeInfoList* field_types_list_reverse(TypeFieldTypeInfoList* field_types);
 void translate_exp(bool flag/* false means value */, Frame *f, TAB_table_ *type_env, TAB_table_ *var_env, Symbol *brk, SyntaxExp *exp, TranslateExp **out_tr_exp);
 void translate_type_decl_stmts(TAB_table_ *type_env, SyntaxMoonStmtsList *stmts);
 TypeInfo* translate_type(TAB_table_ *type_env, SyntaxType *syntax_type);
@@ -140,6 +142,8 @@ void translate(SyntaxMoonStmtsList *stmts) {
     S_enter(type_env, make_symbol(INT_TP), make_int_type_info());
     S_enter(type_env, make_symbol(STRING_TP), make_string_type_info());
 
+    /* for both STRUCT AND ARRAY */
+    S_enter(var_env, make_symbol(CTOR_FUNC), make_func_entry(make_func_type_info_with_variable_params(nullptr), make_new_label()));
 
     /*
      * global function declare
@@ -370,7 +374,7 @@ void translate_exp(bool flag/* false means value */, Frame *f, TAB_table_ *type_
                 assert(false);  /* call not a function */
             }
             TypeInfoList *param_types = fun_type->u.func_.type_->u.func_proto.params_;
-            sprintf(buf, "          %-5s%d", "ALC", 1);
+            sprintf(buf, "          %-5s%d", "ALC", 1); // for return value
             insert_insts_list(buf); // return value;
             /* params push in reverse order  */
             params = params_list_reverse(params);
@@ -503,7 +507,63 @@ void translate_exp(bool flag/* false means value */, Frame *f, TAB_table_ *type_
             }
         } break;
         case SyntaxExp::EXPR_LIST: {
-            /* todo struct ctor, array stor */
+            sprintf(buf, "          %-5s%d", "ALC", 1); // for return value
+            insert_insts_list(buf); // return value;
+            TypeInfo *type = translate_type(type_env, syntax_exp->u.struct_array_init_.type_);
+            TypeInfo *tp = actural_type(type);
+            switch (tp->kind_) {
+                case TypeInfo::ARRAY: {
+                    SyntaxExpsList *params = syntax_exp->u.struct_array_init_.expr_list_;
+                    int i = 0;
+                    SyntaxExpsList *it_exp = nullptr;
+                    TypeInfo *elem_type = tp->u.array_elem_;
+                    /* params push in reverse order  */
+                    params = params_list_reverse(params);
+                    for (it_exp = params, i = 0; it_exp; it_exp = it_exp->next_, ++i) {
+                        TranslateExp *tmp = nullptr;
+                        translate_exp(false, f, type_env, var_env, brk, it_exp->expr_, &tmp);
+                        if (!TypeInfoEqual(elem_type, tmp->type_)) {
+                            assert(false);  /* ARRAY CTOR call param type conflict error */
+                        }
+                    }
+                    sprintf(buf, "          %-5s%d", "LOC", i); /* PUSH PARAMS CNT */
+                    insert_insts_list(buf);
+                    Entry *ctor = (Entry*)S_look(var_env, make_symbol(CTOR_FUNC));
+                    assert(ctor->kind_ == Entry::FUNC && ctor->u.func_.type_->u.func_proto.is_variable_params_);
+                    sprintf(buf, "          %-5s%s", "CALL", ctor->u.func_.label_->symbol_.c_str());
+                    insert_insts_list(buf);
+                    out_put->type_ = tp;
+                } break;
+                case TypeInfo::STRUCT: {
+                    SyntaxExpsList *params = syntax_exp->u.struct_array_init_.expr_list_;
+                    TypeFieldTypeInfoList *field_types = tp->u.struct_fields_type_;
+                    int i = 0;
+                    SyntaxExpsList *it_exp = nullptr;
+                    TypeFieldTypeInfoList *it_type = nullptr;
+                    /* params push in reverse order  */
+                    params = params_list_reverse(params);
+                    field_types = field_types_list_reverse(field_types);
+                    for (it_exp = params, it_type = field_types; it_exp && it_type; it_exp = it_exp->next_, it_type = it_type->next_, ++i) {
+                        TranslateExp *tmp = nullptr;
+                        translate_exp(false, f, type_env, var_env, brk, it_exp->expr_, &tmp);
+                        if (!TypeInfoEqual(tmp->type_, it_type->field_type_info_->field_type_)) {
+                            assert(false);  /* STRUCT CTOR CALL params cnt error */
+                        }
+                    }
+                    if (it_type || it_exp) {
+                        assert(false);  /* STRUCT CTOR CALL param type conflict error */
+                    }
+                    sprintf(buf, "          %-5s%d", "LOC", i); /* PUSH PARAMS CNT */
+                    insert_insts_list(buf);
+                    Entry *ctor = (Entry*)S_look(var_env, make_symbol(CTOR_FUNC));
+                    assert(ctor->kind_ == Entry::FUNC && ctor->u.func_.type_->u.func_proto.is_variable_params_);
+                    sprintf(buf, "          %-5s%s", "CALL", ctor->u.func_.label_->symbol_.c_str());
+                    insert_insts_list(buf);
+                    out_put->type_ = tp;
+                } break;
+                default:
+                    assert(false);  /* unreachable */
+            }
         } break;
         default:
             assert(false);  /* unreachable */
@@ -796,6 +856,16 @@ TypeInfoList* param_types_list_reverse(TypeInfoList* tps) {
     TypeInfoList *ret_it = nullptr;
     for (TypeInfoList *it = tps; it; it = it->next_) {
         ret_it = make_type_info_list(it->type_info_, ret_it);
+    }
+    return ret_it;
+}
+
+TypeFieldTypeInfoList* field_types_list_reverse(TypeFieldTypeInfoList* field_types) {
+    if (!field_types)
+        return nullptr;
+    TypeFieldTypeInfoList *ret_it = nullptr;
+    for (TypeFieldTypeInfoList *it = field_types; it; it = it->next_) {
+        ret_it = make_field_type_info_list(it->field_type_info_, ret_it);
     }
     return ret_it;
 }

@@ -11,6 +11,7 @@ Entry* make_var_entry(TypeInfo *type, Access *access, TranslateLevel *level) {
     ret->u.var_.level_ = level;
     return ret;
 }
+
 Entry* make_func_entry(TypeInfo *type, Symbol *label) {
     assert(type->kind_ == TypeInfo::FUNC);
     Frame *frame = make_frame(type);

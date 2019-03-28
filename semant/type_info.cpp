@@ -46,6 +46,17 @@ TypeInfo* make_func_type_info(TypeInfo *result, Symbol *func, TypeInfoList *para
     ret->u.func_proto.result_ = result;
     ret->u.func_proto.func_ = func;
     ret->u.func_proto.params_ = params;
+    ret->u.func_proto.is_variable_params_ = false;
+    return ret;
+}
+
+TypeInfo* make_func_type_info_with_variable_params(Symbol *func) {
+    TypeInfo *ret = new TypeInfo;
+    ret->kind_ = TypeInfo::FUNC;
+    ret->u.func_proto.result_ = nullptr;
+    ret->u.func_proto.func_ = func;
+    ret->u.func_proto.params_ = nullptr;
+    ret->u.func_proto.is_variable_params_ = true;
     return ret;
 }
 

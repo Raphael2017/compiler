@@ -19,6 +19,7 @@ struct TypeInfo {
             TypeInfo *type_info_;
         } named_;  // typedef , type header
         struct {
+            bool is_variable_params_;
             TypeInfo *result_;
             Symbol *func_;
             TypeInfoList *params_;
@@ -54,6 +55,8 @@ TypeInfo* make_struct_type_info(TypeFieldTypeInfoList *struct_fields);
 TypeInfo* make_named_type_info(Symbol *sym, TypeInfo *type_info);
 
 TypeInfo* make_func_type_info(TypeInfo *result, Symbol *func, TypeInfoList *params);
+
+TypeInfo* make_func_type_info_with_variable_params(Symbol *func);
 
 TypeInfoList* make_type_info_list(TypeInfo *type_info, TypeInfoList *next);
 
