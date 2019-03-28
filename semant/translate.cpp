@@ -9,7 +9,21 @@
 #include <string.h>
 #include <list>
 
-void access_local_or_global(Access* ac, bool flag/* false means value */);
+#define INT_TP          "<INT>"
+#define STRING_TP       "<STRING>"
+
+struct TranslateExp {
+    TypeInfo *type_;
+    void* exp_;
+};
+
+struct InstList {
+    char *inst_;
+    InstList *next_;
+};
+
+InstList *g_insts = nullptr;
+InstList *g_insts_it = nullptr;
 
 void FFF(void* value) {
     Entry *entry = (Entry*)value;
@@ -58,24 +72,11 @@ Symbol* make_new_label() {
     return make_symbol(s.c_str());
 }
 
-struct TranslateExp {
-    TypeInfo *type_;
-    void* exp_;
-};
-
 TranslateLevel* make_new_level(TranslateLevel *parent) {
     TranslateLevel *ret = new TranslateLevel;
     ret->parent_ = parent;
     return ret;
 }
-
-struct InstList {
-    char *inst_;
-    InstList *next_;
-};
-
-InstList *g_insts = nullptr;
-InstList *g_insts_it = nullptr;
 
 InstList* insert_insts_list(char *inst) {
     if (!g_insts_it) {
@@ -84,8 +85,7 @@ InstList* insert_insts_list(char *inst) {
         g_insts_it->next_ = nullptr;
         g_insts = g_insts_it;
     }
-    else
-    {
+    else {
         g_insts_it->next_ = new InstList;
         g_insts_it->next_->inst_ = inst != nullptr ? strdup(inst) : inst;
         g_insts_it->next_->next_ = nullptr;
@@ -99,10 +99,6 @@ void dump_insts() {
         printf("%s\n", it->inst_);
     }
 }
-
-
-#define INT_TP          "<INT>"
-#define STRING_TP       "<STRING>"
 
 TypeInfo* actural_type(TypeInfo *type) {
     if (type->kind_ == TypeInfo::NAMED) {
@@ -123,20 +119,19 @@ bool TypeInfoEqual(TypeInfo *type1, TypeInfo *type2) {
     }
     return false;
 }
-
+void access_local_or_global(Access* ac, bool flag/* false means value */);
 SyntaxExpsList* params_list_reverse(SyntaxExpsList *exps);
 TypeInfoList* param_types_list_reverse(TypeInfoList* tps);
-
-void translate_exp(bool flag/* false means value */, Frame *f, TAB_table_ *type_env, TAB_table_ *var_env, void* brk, SyntaxExp *exp, TranslateExp **out_tr_exp);
+void translate_exp(bool flag/* false means value */, Frame *f, TAB_table_ *type_env, TAB_table_ *var_env, Symbol *brk, SyntaxExp *exp, TranslateExp **out_tr_exp);
 void translate_type_decl_stmts(TAB_table_ *type_env, SyntaxMoonStmtsList *stmts);
 TypeInfo* translate_type(TAB_table_ *type_env, SyntaxType *syntax_type);
 void pre_translate_func_decl_stmts(TAB_table_ *type_env, TAB_table_ *var_env, SyntaxMoonStmtsList *stmts);  /* handle function header so we can handle recursive function */
 void translate_func_decl_stmts(TAB_table_ *type_env, TAB_table_ *var_env, SyntaxMoonStmtsList *stmts);      /* handle function body */
 void translate_global_var_decl_stmts(TAB_table_ *type_env, TAB_table_ *var_env, SyntaxMoonStmtsList *stmts);
 
-void translate1(TranslateLevel *level, Frame *f, TAB_table_ *type_env, TAB_table_ *var_env, void* brk, SyntaxMoonStmtsList *stmts);
+void translate1(TranslateLevel *level, Frame *f, TAB_table_ *type_env, TAB_table_ *var_env, Symbol *brk, Symbol *return_label, SyntaxMoonStmtsList *stmts);
 
-TypeInfo* translate_left(bool flag/* false means value */, Frame *f, TAB_table_ *type_env, TAB_table_ *var_env, void* brk, SyntaxLeftV *left, TranslateExp *out_tr_exp);
+TypeInfo* translate_left(bool flag/* false means value */, Frame *f, TAB_table_ *type_env, TAB_table_ *var_env, Symbol *brk, SyntaxLeftV *left, TranslateExp *out_tr_exp);
 
 void translate(SyntaxMoonStmtsList *stmts) {
     S_table type_env = S_empty();
@@ -208,17 +203,11 @@ void translate(SyntaxMoonStmtsList *stmts) {
     translate_global_var_decl_stmts(type_env, var_env, global_decl_var_stmts);
     translate_func_decl_stmts(type_env, var_env, global_decl_func_stmts);
 
-    TypeInfo *Lesson = (TypeInfo*)S_look(type_env, make_symbol("Lesson"));
-    TypeInfo *Student = (TypeInfo*)S_look(type_env, make_symbol("Student"));
-    TypeInfo *Node = (TypeInfo*)S_look(type_env, make_symbol("Node"));
-
-    Entry *student_ctor = (Entry*)S_look(var_env, make_symbol("student_ctor"));
-    InstList *g = g_insts;
     dump_insts();
     return;
 }
 
-void translate1(TranslateLevel *level, Frame *f, TAB_table_ *type_env, TAB_table_ *var_env, void* brk, SyntaxMoonStmtsList *stmts) {
+void translate1(TranslateLevel *level, Frame *f, TAB_table_ *type_env, TAB_table_ *var_env, Symbol *brk, Symbol *return_label, SyntaxMoonStmtsList *stmts) {
     char buf[64] = { 0 };
     for (SyntaxMoonStmtsList *it = stmts; it != nullptr; it = it->next_) {
         SyntaxMoonStmt *stmt = it->stmt_;
@@ -268,20 +257,18 @@ void translate1(TranslateLevel *level, Frame *f, TAB_table_ *type_env, TAB_table
                 sprintf(codestr, "          %-5s%s", "CJMP", lab1->symbol_.c_str());
                 insert_insts_list(codestr);
                 S_beginScope(var_env);
-                translate1(make_new_level(level), f, type_env, var_env, brk, stmt->u.if_stmt_.true_body_);
+                translate1(make_new_level(level), f, type_env, var_env, brk, return_label, stmt->u.if_stmt_.true_body_);
                 S_endScope(var_env, FFF);
-                if (stmt->u.if_stmt_.false_body_)
-                {
+                if (stmt->u.if_stmt_.false_body_) {
                     lab2 = make_new_label();
                     sprintf(codestr, "          %-5s%s", "JMP", lab2->symbol_.c_str());
                     insert_insts_list(codestr);
                 }
                 sprintf(codestr, "%-5s%s :", "LAB", lab1->symbol_.c_str());
                 insert_insts_list(codestr);
-                if (stmt->u.if_stmt_.false_body_)
-                {
+                if (stmt->u.if_stmt_.false_body_) {
                     S_beginScope(var_env);
-                    translate1(make_new_level(level), f, type_env, var_env, brk, stmt->u.if_stmt_.false_body_);
+                    translate1(make_new_level(level), f, type_env, var_env, brk, return_label, stmt->u.if_stmt_.false_body_);
                     S_endScope(var_env, FFF);
                     sprintf(codestr, "%-5s%s :", "LAB", lab2->symbol_.c_str());
                     insert_insts_list(codestr);
@@ -299,7 +286,7 @@ void translate1(TranslateLevel *level, Frame *f, TAB_table_ *type_env, TAB_table
                 sprintf(codestr, "          %-5s%s", "CJMP", lab2->symbol_.c_str());
                 insert_insts_list(codestr);
                 S_beginScope(var_env);
-                translate1(make_new_level(level), f, type_env, var_env, brk, stmt->u.while_stmt_.while_body_);
+                translate1(make_new_level(level), f, type_env, var_env, lab2, return_label, stmt->u.while_stmt_.while_body_);
                 S_endScope(var_env, FFF);
                 sprintf(codestr, "          %-5s%s", "JMP", lab1->symbol_.c_str());
                 insert_insts_list(codestr);
@@ -325,12 +312,19 @@ void translate1(TranslateLevel *level, Frame *f, TAB_table_ *type_env, TAB_table
                 insert_insts_list(buf);
                 sprintf(buf, "          %-5s", "STO");
                 insert_insts_list(buf);
-                sprintf(buf, "          %-5s", "RET");
+                if (!return_label) {
+                    assert(false);  /* internal error */
+                }
+                sprintf(buf, "          %-5s%s", "JMP", return_label->symbol_.c_str());
                 insert_insts_list(buf);
             } break;
             case SyntaxMoonStmt::BREAK_STMT: {
-                /* todo */
-            }
+                if (!brk) {
+                    assert(false);  /* internal error */
+                }
+                sprintf(buf, "          %-5s%s", "JMP", brk->symbol_.c_str());
+                insert_insts_list(buf);
+            } break;
             default: {
                 assert(false);  //DECL_TYPE_STMT, DECL_FUNC_STMT in function is not allowed
             }
@@ -339,7 +333,7 @@ void translate1(TranslateLevel *level, Frame *f, TAB_table_ *type_env, TAB_table
     }
 }
 
-void translate_exp(bool flag/* false means value */, Frame *f, TAB_table_ *type_env, TAB_table_ *var_env, void* brk, SyntaxExp *syntax_exp, TranslateExp **out_tr_exp) {
+void translate_exp(bool flag/* false means value */, Frame *f, TAB_table_ *type_env, TAB_table_ *var_env, Symbol *brk, SyntaxExp *syntax_exp, TranslateExp **out_tr_exp) {
     char buf[64] = { 0 };
     *out_tr_exp = new TranslateExp;
     TranslateExp *out_put = *out_tr_exp;
@@ -426,10 +420,52 @@ void translate_exp(bool flag/* false means value */, Frame *f, TAB_table_ *type_
                     out_put->type_ = (TypeInfo*)S_look(type_env, make_symbol(INT_TP));
                 } break;
                 case OR_OP: {
-
+                    TranslateExp *l = nullptr, *r = nullptr;
+                    translate_exp(false, f, type_env, var_env, brk, syntax_exp->u.op_exp_.l_, &l);
+                    if (actural_type(l->type_)->kind_ != TypeInfo::INT) {
+                        assert(false);  /*  Or operator error */
+                    }
+                    Symbol *lab1 = make_new_label();
+                    sprintf(buf, "          %-5s%s", "CJMP", lab1->symbol_.c_str());
+                    insert_insts_list(buf);
+                    sprintf(buf, "          %-5s%d", "LOC", 1);
+                    insert_insts_list(buf);
+                    Symbol *lab2 = make_new_label();
+                    sprintf(buf, "          %-5s%s", "JMP", lab2->symbol_.c_str());
+                    insert_insts_list(buf);
+                    sprintf(buf, "%-5s%s :", "LAB", lab1->symbol_.c_str());
+                    insert_insts_list(buf);
+                    translate_exp(false, f, type_env, var_env, brk, syntax_exp->u.op_exp_.r_, &r);
+                    if (actural_type(r->type_)->kind_ != TypeInfo::INT) {
+                        assert(false);  /*  Or operator error */
+                    }
+                    sprintf(buf, "%-5s%s :", "LAB", lab2->symbol_.c_str());
+                    insert_insts_list(buf);
+                    out_put->type_ = (TypeInfo*)S_look(type_env, make_symbol(INT_TP));
                 } break;
                 case AND_OP: {
-
+                    TranslateExp *l = nullptr, *r = nullptr;
+                    translate_exp(false, f, type_env, var_env, brk, syntax_exp->u.op_exp_.l_, &l);
+                    if (actural_type(l->type_)->kind_ != TypeInfo::INT) {
+                        assert(false);  /*  And operator error */
+                    }
+                    Symbol *lab1 = make_new_label();
+                    sprintf(buf, "          %-5s%s", "CJMP", lab1->symbol_.c_str());
+                    insert_insts_list(buf);
+                    translate_exp(false, f, type_env, var_env, brk, syntax_exp->u.op_exp_.r_, &r);
+                    if (actural_type(r->type_)->kind_ != TypeInfo::INT) {
+                        assert(false);  /*  Or operator error */
+                    }
+                    Symbol *lab2 = make_new_label();
+                    sprintf(buf, "          %-5s%s", "JMP", lab2->symbol_.c_str());
+                    insert_insts_list(buf);
+                    sprintf(buf, "%-5s%s :", "LAB", lab1->symbol_.c_str());
+                    insert_insts_list(buf);
+                    sprintf(buf, "          %-5s%d", "LOC", 0);
+                    insert_insts_list(buf);
+                    sprintf(buf, "%-5s%s :", "LAB", lab2->symbol_.c_str());
+                    insert_insts_list(buf);
+                    out_put->type_ = (TypeInfo*)S_look(type_env, make_symbol(INT_TP));
                 } break;
                 case LT_OP:
                 case GT_OP:
@@ -474,7 +510,7 @@ void translate_exp(bool flag/* false means value */, Frame *f, TAB_table_ *type_
     }
 }
 
-TypeInfo* translate_left(bool flag/* false means value */, Frame *f, TAB_table_ *type_env, TAB_table_ *var_env, void* brk, SyntaxLeftV *left, TranslateExp *out_put) {
+TypeInfo* translate_left(bool flag/* false means value */, Frame *f, TAB_table_ *type_env, TAB_table_ *var_env, Symbol *brk, SyntaxLeftV *left, TranslateExp *out_put) {
     char buf[64] = { 0 };
     switch (left->kind_) {
         case SyntaxLeftV::Simple: {
@@ -693,9 +729,14 @@ void translate_func_decl_stmts(TAB_table_ *type_env, TAB_table_ *var_env, Syntax
         if (it1 || it2 || it3) {
             assert(false);  /* internal error */
         }
-        translate1(make_new_level(nullptr), fun_entry->u.func_.frame_, type_env, var_env, label, stmt->u.decl_func_stmt.func_body_);
+        Symbol *ret = make_new_label();
+        translate1(make_new_level(nullptr), fun_entry->u.func_.frame_, type_env, var_env, nullptr, ret, stmt->u.decl_func_stmt.func_body_);
         sprintf(buf, "          %-5s%d", "ALC", fun_entry->u.func_.frame_->max_local_count_);
         *patch = strdup(buf);
+        sprintf(buf, "%-5s%s :", "LAB", ret->symbol_.c_str());
+        insert_insts_list(buf);
+        sprintf(buf, "          %-5s", "RET");
+        insert_insts_list(buf);
         S_endScope(var_env, FFF);
     }
 }

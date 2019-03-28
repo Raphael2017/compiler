@@ -729,6 +729,9 @@ FLAB    LENGTH:
     RET
 
 
+int<StringAddress> string_ctor()
+
+
 
 
 

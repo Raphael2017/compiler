@@ -19,7 +19,7 @@ std::string readFileContents(const std::string& file_path)
 
 int main() {
     ParseResult result;
-    std::string moon_script = readFileContents("/home/qwerty/CLionProjects/compler/script.moon");
+    std::string moon_script = readFileContents("/home/qwerty/github/compiler/script.moon");
     moon_parser::parse_moon(moon_script, &result);
     SyntaxMoonStmtsList *stmts = result.moon_stmts_list_;
     if (result.accept == false || !stmts)
