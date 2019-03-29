@@ -169,6 +169,12 @@ SyntaxExp* make_expr_int_const(int i) {
     return ret;
 }
 
+SyntaxExp* make_expr_nil_const() {
+    SyntaxExp *ret = new SyntaxExp;
+    ret->kind_ = SyntaxExp::NIL_CONST;
+    return ret;
+}
+
 SyntaxExp* make_expr_bool_const(bool b) {
     SyntaxExp *ret = new SyntaxExp;
     ret->kind_ = SyntaxExp::BOOL_CONST;

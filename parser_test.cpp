@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <assert.h>
+#include <stdlib.h>
 
 std::string readFileContents(const std::string& file_path)
 {
@@ -18,6 +19,10 @@ std::string readFileContents(const std::string& file_path)
 
 
 int main() {
+    char *out = nullptr;
+    long int cc = strtol("12", &out, 0);
+
+
     ParseResult result;
     std::string moon_script = readFileContents("/home/qwerty/github/compiler/script.moon");
     moon_parser::parse_moon(moon_script, &result);

@@ -96,6 +96,7 @@ int yyerror(YYLTYPE* llocp, ParseResult* result, yyscan_t scanner, const char *m
 %token ELSE END_P ERROR
 %token FALSE
 %token IF INT
+%token NIL
 %token RETURN
 %token STRING_ STRUCT
 %token TRUE TYPEDEF
@@ -103,8 +104,7 @@ int yyerror(YYLTYPE* llocp, ParseResult* result, yyscan_t scanner, const char *m
 %token WHILE
 
 
-%nonassoc '['
-%nonassoc LOW
+%left '['
 %right '='
 %left OR
 %left AND
@@ -235,13 +235,22 @@ type:
     IDENTIFIER				{ $$ = make_named_type($1); }
   | INT					{ $$ = make_int_type(); }
   | STRING_				{ $$ = make_string_type(); }
-  | VOID				{ $$ = make_void_type(); }
-  | IDENTIFIER '[' ']'			{ $$ = make_named_arr_type($1, 0); }
+  | left_value '[' ']'
+{
+    /* ???? */
+    /* because it will be reduced by left_value : IDENTIFIER */
+    if ($1->kind_ != SyntaxLeftV::Simple) {
+        yyerror(&@1, result, scanner, "type use error");
+        YYABORT;
+    }
+    $$ = make_named_arr_type($1->u.name_, 0);
+}
   | INT '[' ']'				{ $$ = make_int_arr_type(0); }
 ;
 
 expression:
     INTNUM				{ $$ = make_expr_int_const($1); }
+  | NIL					{ $$ = make_expr_nil_const(); }
   | TRUE				{ $$ = make_expr_bool_const(true); }
   | FALSE				{ $$ = make_expr_bool_const(false); }
   | STRING				{ $$ = make_expr_str_const($1); }
@@ -263,6 +272,7 @@ expression:
   | expression EQ expression		{ $$ = make_expr_op(EQ_OP, $1, $3); }
   | expression NEQ expression		{ $$ = make_expr_op(NEQ_OP, $1, $3); }
   | type '{' expression_list '}'	{ $$ = make_expr_struct_array_init($3, $1); }
+  | '(' expression ')'			{ $$ = $2; }
 ;
 
 expression_list:

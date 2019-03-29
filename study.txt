@@ -671,7 +671,7 @@ int<ArrayAddress> array_ctor(int cnt, ...) {
 }
 
 
-FLAB  ARRAY_CTOR:
+FLAB  CTOR:
         ALC     2
         LOV     3
         LOA     -1

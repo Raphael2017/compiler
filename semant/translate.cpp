@@ -11,6 +11,7 @@
 
 #define INT_TP          "<INT>"
 #define STRING_TP       "<STRING>"
+#define VOID_TP         "<VOID>"
 #define CTOR_FUNC       "<CTOR>"
 
 struct TranslateExp {
@@ -61,6 +62,10 @@ const char* op_str(ExpOp op) {
             return "MPI";
         case DIVIDE_OP:
             return "DIV";
+        case EQ_OP:
+            return "EQ";
+        case NEQ_OP:
+            return "NEQ";
         default:
             assert(false);
     }
@@ -118,6 +123,12 @@ bool TypeInfoEqual(TypeInfo *type1, TypeInfo *type2) {
     else if (type1->kind_ == TypeInfo::ARRAY && type2->kind_ == TypeInfo::ARRAY) {
         return TypeInfoEqual(type1->u.array_elem_, type2->u.array_elem_);
     }
+    else if (type1->kind_ == TypeInfo::ARRAY || type1->kind_ == TypeInfo::STRUCT) {
+        return type2->kind_ == TypeInfo::VOID;
+    }
+    else if (type2->kind_ == TypeInfo::ARRAY || type2->kind_ == TypeInfo::STRUCT) {
+        return type1->kind_ == TypeInfo::VOID;
+    }
     return false;
 }
 void access_local_or_global(Access* ac, bool flag/* false means value */);
@@ -141,9 +152,10 @@ void translate(SyntaxMoonStmtsList *stmts) {
 
     S_enter(type_env, make_symbol(INT_TP), make_int_type_info());
     S_enter(type_env, make_symbol(STRING_TP), make_string_type_info());
+    S_enter(type_env, make_symbol(VOID_TP), make_void_type_info());
 
     /* for both STRUCT AND ARRAY */
-    S_enter(var_env, make_symbol(CTOR_FUNC), make_func_entry(make_func_type_info_with_variable_params(nullptr), make_new_label()));
+    S_enter(var_env, make_symbol(CTOR_FUNC), make_func_entry(make_func_type_info_with_variable_params(nullptr), make_symbol(CTOR_FUNC)));
 
     /*
      * global function declare
@@ -347,6 +359,11 @@ void translate_exp(bool flag/* false means value */, Frame *f, TAB_table_ *type_
     /*enum { INT_CONST, BOOL_CONST, STRING_CONST, LEFT_VALUE,
         FUNC_CALL, ASSIGN, OP_EXP, EXPR_LIST} kind_;*/
     switch (syntax_exp->kind_) {
+        case SyntaxExp::NIL_CONST: {
+            sprintf(buf, "          %-5s%d", "LOC", 0);
+            insert_insts_list(buf);
+            out_put->type_ = (TypeInfo*)S_look(type_env, make_symbol(VOID_TP));
+        } break;
         case SyntaxExp::INT_CONST: {
             sprintf(buf, "          %-5s%d", "LOC", syntax_exp->u.int_const_);
             insert_insts_list(buf);

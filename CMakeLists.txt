@@ -3,6 +3,7 @@ set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -pedantic ${CMAKE_CXX_FLAGS}")
 include_directories(parser)
 include_directories(semant)
 include_directories(utils)
+include_directories(run)
 project(compler)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -18,4 +19,5 @@ add_executable(compler
         semant/table.cpp
         semant/translate.cpp
         semant/entry.cpp
+        run/instruction.cpp
         parser_test.cpp)

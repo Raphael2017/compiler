@@ -108,7 +108,7 @@ enum ExpOp { NEGATIVE_OP, OR_OP, AND_OP, LT_OP,
     EQ_OP, NEQ_OP };
 
 struct SyntaxExp {
-    enum { INT_CONST, BOOL_CONST, STRING_CONST, LEFT_VALUE,
+    enum { NIL_CONST, INT_CONST, BOOL_CONST, STRING_CONST, LEFT_VALUE,
             FUNC_CALL, ASSIGN, OP_EXP, EXPR_LIST} kind_;
     union {
         int int_const_;
@@ -198,6 +198,8 @@ SyntaxType* make_int_arr_type(SyntaxExp *size);
 SyntaxType* make_named_arr_type(Symbol *sym, SyntaxExp *size);
 
 SyntaxExp* make_expr_int_const(int i);
+
+SyntaxExp* make_expr_nil_const();
 
 SyntaxExp* make_expr_bool_const(bool b);
 
