@@ -470,7 +470,7 @@ ALC             3       ;_ _ | ==> _ _ _ _ _ |
 DALC            1       ;_ _ _ | ==> _ _ |
 
 ////////////////////////////////////////////////////////////
-
+1 1 2 3 5 8
 ############################################################
 
     d = (x * (y-z))/(d-i=(i+1)) +1;
@@ -736,7 +736,128 @@ int<StringAddress> string_ctor()
 
 
 
-
+FLAB L1 :
+          ALC  0
+          ALC  1
+          LOV  3
+          LOV  4
+          LOC  2
+          CALL <CTOR>
+          LOA  5
+          STO
+          JMP  L5
+LAB  L5 :
+          RET
+FLAB L2 :
+          ALC  2
+          LOV  3
+          LOA  -1
+          STO
+          LOC  0
+          LOA  -2
+          STO
+LAB  L7 :
+          LOV  -1
+          LOC  0
+          NEQ
+          CJMP L8
+          LOV  -2
+          LOV  -1
+          LOC  0
+          ADD
+          IND  0
+          ADD
+          LOA  -2
+          STN
+          DALC 1
+          JMP  L7
+LAB  L8 :
+          LOV  -2
+          LOA  4
+          STO
+          JMP  L6
+LAB  L6 :
+          RET
+FLAB L3 :
+          ALC  2
+          LOC  0
+          LOA  -1
+          STO
+          LOC  0
+          LOA  -2
+          STO
+LAB  L10 :
+          LOV  -1
+          LOC  100
+          LT
+          CJMP L11
+          ALC  1
+          LOV  -1
+          CALL L4
+          CJMP L12
+          ALC  1
+          LOV  -1
+          LOV  -2
+          CALL L1
+          LOA  -2
+          STN
+          DALC 1
+LAB  L12 :
+          LOV  -1
+          LOC  1
+          ADD
+          LOA  -1
+          STN
+          DALC 1
+          JMP  L10
+LAB  L11 :
+LAB  L9 :
+          RET
+FLAB L4 :
+          ALC  2
+          LOC  1
+          LOA  -1
+          STO
+          LOC  1
+          LOA  -2
+          STO
+LAB  L14 :
+          LOV  -1
+          LOV  3
+          LOC  2
+          DIV
+          LT
+          CJMP L15
+          LOV  -1
+          LOV  -1
+          LOV  3
+          DIV
+          LOV  3
+          MPI
+          SUB
+          LOC  0
+          EQ
+          CJMP L16
+          LOC  0
+          LOA  -2
+          STN
+          DALC 1
+          JMP  L15
+LAB  L16 :
+          LOV  -1
+          LOC  1
+          ADD
+          LOA  -1
+          STN
+          DALC 1
+          JMP  L14
+LAB  L15 :
+          LOV  -2
+          LOA  4
+          STO
+          JMP  L13
+LAB  L13 :
+          RET
 
 
 

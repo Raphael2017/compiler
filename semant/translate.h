@@ -14,6 +14,11 @@ struct TranslateLevel {
     TranslateLevel *parent_;
 };
 
+struct InstList {
+    char *inst_;
+    InstList *next_;
+};
+
 TranslateLevel* make_new_level(TranslateLevel *parent);
 
 void translate(SyntaxMoonStmtsList *stmts);

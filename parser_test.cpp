@@ -21,10 +21,10 @@ std::string readFileContents(const std::string& file_path)
 int main() {
     char *out = nullptr;
     long int cc = strtol("12", &out, 0);
-
+    int aaaa = sizeof(void*);
 
     ParseResult result;
-    std::string moon_script = readFileContents("/home/qwerty/github/compiler/script.moon");
+    std::string moon_script = readFileContents("C:\\proj\\compiler/script.moon");
     moon_parser::parse_moon(moon_script, &result);
     SyntaxMoonStmtsList *stmts = result.moon_stmts_list_;
     if (result.accept == false || !stmts)
@@ -34,6 +34,7 @@ int main() {
     }
 
     translate(stmts);
+    getchar();
     return 0;
 }
 

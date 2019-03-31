@@ -1,4 +1,4 @@
-#include <assert.h>
+//#include <assert.h>
 #include <syntax_tree.h>
 #include "translate.h"
 #include "frame.h"
@@ -8,21 +8,26 @@
 #include "syntax_tree.h"
 #include <string.h>
 #include <list>
+#include "run.h"
 
 #define INT_TP          "<INT>"
 #define STRING_TP       "<STRING>"
 #define VOID_TP         "<VOID>"
 #define CTOR_FUNC       "<CTOR>"
 
+#define PRINT_INT       "PRINT_INT"
+#define PRINT_STR       "PRINT_STR"
+
 struct TranslateExp {
     TypeInfo *type_;
     void* exp_;
 };
 
-struct InstList {
-    char *inst_;
-    InstList *next_;
-};
+void assert(bool a) {
+    if (!a) {
+        printf("123");
+    }
+}
 
 InstList *g_insts = nullptr;
 InstList *g_insts_it = nullptr;
@@ -84,16 +89,16 @@ TranslateLevel* make_new_level(TranslateLevel *parent) {
     return ret;
 }
 
-InstList* insert_insts_list(char *inst) {
+InstList* insert_insts_list(const char *inst) {
     if (!g_insts_it) {
         g_insts_it = new InstList;
-        g_insts_it->inst_ = inst != nullptr ? strdup(inst) : inst;
+        g_insts_it->inst_ = inst != nullptr ? strdup(inst) : nullptr;
         g_insts_it->next_ = nullptr;
         g_insts = g_insts_it;
     }
     else {
         g_insts_it->next_ = new InstList;
-        g_insts_it->next_->inst_ = inst != nullptr ? strdup(inst) : inst;
+        g_insts_it->next_->inst_ = inst != nullptr ? strdup(inst) : nullptr;
         g_insts_it->next_->next_ = nullptr;
         g_insts_it = g_insts_it->next_;
     }
@@ -156,6 +161,15 @@ void translate(SyntaxMoonStmtsList *stmts) {
 
     /* for both STRUCT AND ARRAY */
     S_enter(var_env, make_symbol(CTOR_FUNC), make_func_entry(make_func_type_info_with_variable_params(nullptr), make_symbol(CTOR_FUNC)));
+    /*  */
+    S_enter(var_env, make_symbol(PRINT_INT), make_func_entry(make_func_type_info(
+            (TypeInfo*)S_look(type_env, make_symbol(INT_TP)),
+            make_symbol(PRINT_INT),
+            make_type_info_list((TypeInfo*)S_look(type_env, make_symbol(INT_TP)), nullptr)), make_symbol(PRINT_INT)));
+    S_enter(var_env, make_symbol(PRINT_STR), make_func_entry(make_func_type_info(
+            (TypeInfo*)S_look(type_env, make_symbol(INT_TP)),
+            make_symbol(PRINT_STR),
+            make_type_info_list((TypeInfo*)S_look(type_env, make_symbol(STRING_TP)), nullptr)), make_symbol(PRINT_STR)));
 
     /*
      * global function declare
@@ -220,6 +234,7 @@ void translate(SyntaxMoonStmtsList *stmts) {
     translate_func_decl_stmts(type_env, var_env, global_decl_func_stmts);
 
     dump_insts();
+    load_insts(g_insts);
     return;
 }
 
@@ -375,7 +390,10 @@ void translate_exp(bool flag/* false means value */, Frame *f, TAB_table_ *type_
             out_put->type_ = (TypeInfo*)S_look(type_env, make_symbol(INT_TP));
         } break;
         case SyntaxExp::STRING_CONST: {
-            /* todo */
+            std::string ii = syntax_exp->u.string_const_;
+            ii = "<load_string> " + ii;
+            insert_insts_list(ii.c_str());
+            out_put->type_ = (TypeInfo*)S_look(type_env, make_symbol(STRING_TP));
         } break;
         case SyntaxExp::LEFT_VALUE: {
             translate_left(flag, f, type_env, var_env, brk, syntax_exp->u.left_value_, out_put);
@@ -398,7 +416,8 @@ void translate_exp(bool flag/* false means value */, Frame *f, TAB_table_ *type_
             param_types = param_types_list_reverse(param_types);
             SyntaxExpsList *it_exp = nullptr;
             TypeInfoList *it_tp = nullptr;
-            for (it_exp = params,it_tp = param_types; it_exp&&it_exp; it_exp = it_exp->next_, it_tp = it_tp->next_) {
+            int i = 0;
+            for (it_exp = params,it_tp = param_types, i = 0; it_exp&&it_exp; it_exp = it_exp->next_, it_tp = it_tp->next_,++i) {
                 TranslateExp *tmp = nullptr;
                 translate_exp(false, f, type_env, var_env, brk, it_exp->expr_, &tmp);
                 if (!TypeInfoEqual(it_tp->type_info_, tmp->type_)) {
@@ -408,6 +427,8 @@ void translate_exp(bool flag/* false means value */, Frame *f, TAB_table_ *type_
             if (it_exp || it_tp) {
                 assert(false);  /* function call param count error */
             }
+            sprintf(buf, "          %-5s%d", "LOC", i); /* PUSH PARAMS CNT */
+            insert_insts_list(buf);
             sprintf(buf, "          %-5s%s", "CALL", fun_type->u.func_.label_->symbol_.c_str());
             insert_insts_list(buf);
             out_put->type_ = fun_type->u.func_.type_->u.func_proto.result_;
@@ -811,6 +832,8 @@ void translate_func_decl_stmts(TAB_table_ *type_env, TAB_table_ *var_env, Syntax
         sprintf(buf, "          %-5s%d", "ALC", fun_entry->u.func_.frame_->max_local_count_);
         *patch = strdup(buf);
         sprintf(buf, "%-5s%s :", "LAB", ret->symbol_.c_str());
+        insert_insts_list(buf);
+        sprintf(buf, "          %-5s%d", "DALC", fun_entry->u.func_.frame_->max_local_count_);
         insert_insts_list(buf);
         sprintf(buf, "          %-5s", "RET");
         insert_insts_list(buf);

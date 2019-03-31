@@ -1,42 +1,20 @@
-struct LinkedList {
-    int data_;
-    LinkedList next_;
+int main() {
+    Student stu = Student{'zhangsan', Lesson[]{Lesson{12,100}, Lesson{13,200}}};
+    string id = stu.id_;
+    int price1 = stu.lessons_[0].price_;
+    int price2 = stu.lessons_[1].price_;
+    int test = price1 / price2;
+    PRINT_STR(id);
+    PRINT_INT(stu.lessons_[0].price_);
+}
+
+struct Lesson {
+    int price_;
+    int time_;
 };
 
-LinkedList insert_front(LinkedList head, int data) {
-    return LinkedList{ data, head };
-}
+struct Student{
+    string id_;
+    Lesson[] lessons_;
+};
 
-int sum(LinkedList head) {
-    LinkedList it = head;
-    int ret = 0;
-    while (it <> nil) {
-        ret = ret + it.data_;
-    }
-    return ret;
-}
-
-int main() {
-    -- Primes less than 100
-    int i = 0;
-    LinkedList primes = nil;
-    while (i < 100) {
-        if (is_prime(i)) {
-            primes = insert_front(primes, i);
-        }
-        i = i + 1;
-    }
-}
-
-int is_prime(int i) {
-    int t = 1;
-    int ret = 1;
-    while (t < i / 2) {
-        if ((t - (t/i)*i) == 0) {   -- Calculate remainder
-            ret = 0;
-            break;
-        }
-        t = t + 1;
-    }
-    return ret;
-}

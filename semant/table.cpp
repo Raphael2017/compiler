@@ -7,6 +7,7 @@
 #include "table.h"
 #include <stdlib.h>
 #include <assert.h>
+#include "stdint-gcc.h"
 
 #define TABSIZE 127
 
@@ -47,7 +48,7 @@ TAB_table TAB_empty(void)
 void TAB_enter(TAB_table t, void *key, void *value)
 {int index;
  assert(t && key);
- index = ((__uint64_t)key) % TABSIZE;
+ index = ((uint64_t)key) % TABSIZE;
  t->table[index] = Binder(key, value,t->table[index], t->top);
  t->top = key;
 }
@@ -56,7 +57,7 @@ void *TAB_look(TAB_table t, void *key)
 {int index;
  binder b;
  assert(t && key);
- index=((__uint64_t)key) % TABSIZE;
+ index=((uint64_t)key) % TABSIZE;
  for(b=t->table[index]; b; b=b->next)
    if (b->key==key) return b->value;
  return NULL;
@@ -67,7 +68,7 @@ void *TAB_pop(TAB_table t, void **out_key, void **out_value) {
   assert (t);
   k = t->top;
   assert (k);
-  index = ((__uint64_t)k) % TABSIZE;
+  index = ((uint64_t)k) % TABSIZE;
   b = t->table[index];
   assert(b);
   t->table[index] = b->next;
@@ -78,7 +79,7 @@ void *TAB_pop(TAB_table t, void **out_key, void **out_value) {
 
 void TAB_dump(TAB_table t, void (*show)(void *key, void *value)) {
   void *k = t->top;
-  int index = ((__uint64_t)k) % TABSIZE;
+  int index = ((uint64_t)k) % TABSIZE;
   binder b = t->table[index];
   if (b==NULL) return;
   t->table[index]=b->next;

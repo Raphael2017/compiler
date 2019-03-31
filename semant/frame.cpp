@@ -27,17 +27,17 @@ Frame* make_frame(TypeInfo *type) {
     int i = 0;
     for (TypeInfoList *it = type->u.func_proto.params_; it; ++i, it = it->next_) {
         if (0 == i) {
-            access_list = make_access_list(make_access(3+i, ret), nullptr);
+            access_list = make_access_list(make_access(4+i, ret), nullptr);
             access_list_head = access_list;
         }
         else
         {
-            access_list->next_ = make_access_list(make_access(3+i, ret), nullptr);
+            access_list->next_ = make_access_list(make_access(4+i, ret), nullptr);
             access_list = access_list->next_;
         }
     }
     ret->access_list_ = access_list_head;
-    ret->result_ = make_access(3+i, ret);
+    ret->result_ = make_access(4+i, ret);
     ret->cur_local_count_ = 0;
     ret->max_local_count_ = 0;
     ret->is_global_ = false;
