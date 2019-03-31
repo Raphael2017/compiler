@@ -1,11 +1,11 @@
 int main() {
-    Student stu = Student{'zhangsan', Lesson[]{Lesson{12,100}, Lesson{13,200}}};
-    string id = stu.id_;
-    int price1 = stu.lessons_[0].price_;
-    int price2 = stu.lessons_[1].price_;
-    int test = price1 / price2;
-    PRINT_STR(id);
-    PRINT_INT(stu.lessons_[0].price_);
+    int[] a = int[]{1,3,2,7,5};
+    sort(a, 0, 4);
+    int i = 0;
+    while (i < 5) {
+        PRINT_INT(a[i]);
+        i = i + 1;
+    }
 }
 
 struct Lesson {
@@ -17,4 +17,27 @@ struct Student{
     string id_;
     Lesson[] lessons_;
 };
+
+int sort(int[] a, int left, int right) {
+    if (left >= right) {
+        return 0;
+    }
+    int i = left;
+    int j = right;
+    int key = a[left];
+    while (i < j) {
+        while (i < j && key <= a[j]) {
+            j = j-1;
+        }
+        a[i] = a[j];
+        while (i < j && key >=a[i]) {
+            i = i+1;
+        }
+        a[j] = a[i];
+    }
+    a[i] = key;
+    sort(a, left, i-1);
+    sort(a, i+1, right);
+    return 0;
+}
 
