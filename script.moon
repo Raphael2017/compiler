@@ -1,11 +1,14 @@
 int main() {
     int[] a = int[]{1,3,2,7,5};
-    sort(a, 0, 4);
+    int[] b = a;
+    sort(b, 0, 4);
     int i = 0;
     while (i < 5) {
         PRINT_INT(a[i]);
         i = i + 1;
     }
+    PRINT_STR('CNT:');
+    PRINT_INT(ARRAY_CNT(a));
 }
 
 struct Lesson {

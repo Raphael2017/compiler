@@ -296,6 +296,13 @@ void run() {
                         std::string str(s, s+length);
                         printf("%s\n", str.c_str());
                     } break;
+                    case -3: {  // array_cnt
+                        pop_stack();
+                        int pos = pop_stack();
+                        int ant = mem_stack(pos - 1);
+                        pop_stack();
+                        push_stack(ant);
+                    } break;
                     default:
                         assert(false);
                 }
@@ -337,6 +344,7 @@ bool load_insts(InstList *src) {
     S_enter(lab_env,make_symbol("<CTOR>"), make_assentry(-1, true, nullptr));
     S_enter(lab_env,make_symbol("PRINT_INT"), make_assentry(-2, true, nullptr));
     S_enter(lab_env,make_symbol("PRINT_STR"), make_assentry(-3, true, nullptr));
+    S_enter(lab_env,make_symbol("ARRAY_CNT"), make_assentry(-4, true, nullptr));
     int line = 0;
     int *t = (int*)(MEMORY_CODE+0);
     for (InstList *it = src; it; it = it->next_) {

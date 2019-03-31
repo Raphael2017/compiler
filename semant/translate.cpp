@@ -17,6 +17,7 @@
 
 #define PRINT_INT       "PRINT_INT"
 #define PRINT_STR       "PRINT_STR"
+#define ARRAY_CNT       "ARRAY_CNT"
 
 struct TranslateExp {
     TypeInfo *type_;
@@ -170,6 +171,12 @@ void translate(SyntaxMoonStmtsList *stmts) {
             (TypeInfo*)S_look(type_env, make_symbol(INT_TP)),
             make_symbol(PRINT_STR),
             make_type_info_list((TypeInfo*)S_look(type_env, make_symbol(STRING_TP)), nullptr)), make_symbol(PRINT_STR)));
+
+    S_enter(var_env, make_symbol(ARRAY_CNT), make_func_entry(make_func_type_info(
+            (TypeInfo*)S_look(type_env, make_symbol(INT_TP)),
+            make_symbol(ARRAY_CNT),
+            nullptr), make_symbol(ARRAY_CNT)));
+
 
     /*
      * global function declare
@@ -417,16 +424,29 @@ void translate_exp(bool flag/* false means value */, Frame *f, TAB_table_ *type_
             SyntaxExpsList *it_exp = nullptr;
             TypeInfoList *it_tp = nullptr;
             int i = 0;
-            for (it_exp = params,it_tp = param_types, i = 0; it_exp&&it_exp; it_exp = it_exp->next_, it_tp = it_tp->next_,++i) {
+            if (make_symbol(ARRAY_CNT) == func) {
+                it_exp = params;
+                assert(it_exp->next_ == nullptr);
+                i = 1;
                 TranslateExp *tmp = nullptr;
                 translate_exp(false, f, type_env, var_env, brk, it_exp->expr_, &tmp);
-                if (!TypeInfoEqual(it_tp->type_info_, tmp->type_)) {
-                    assert(false);  /* function call param type conflict error */
+                if (actural_type(tmp->type_)->kind_ != TypeInfo::ARRAY) {
+                    assert(false);  /* ERROR USE ARRAY_CNT */
                 }
             }
-            if (it_exp || it_tp) {
-                assert(false);  /* function call param count error */
+            else {
+                for (it_exp = params,it_tp = param_types, i = 0; it_exp&&it_exp; it_exp = it_exp->next_, it_tp = it_tp->next_,++i) {
+                    TranslateExp *tmp = nullptr;
+                    translate_exp(false, f, type_env, var_env, brk, it_exp->expr_, &tmp);
+                    if (!TypeInfoEqual(it_tp->type_info_, tmp->type_) ) {
+                        assert(false);  /* function call param type conflict error */
+                    }
+                }
+                if (it_exp || it_tp) {
+                    assert(false);  /* function call param count error */
+                }
             }
+
             sprintf(buf, "          %-5s%d", "LOC", i); /* PUSH PARAMS CNT */
             insert_insts_list(buf);
             sprintf(buf, "          %-5s%s", "CALL", fun_type->u.func_.label_->symbol_.c_str());
