@@ -1,25 +1,12 @@
 int main() {
-    int[] a = int[]{1,3,2,7,5};
-    int[] b = a;
-    sort(b, 0, 4);
+    int[] a = int[] {1,28,2,199,1,0};
+    sort(a, 0, ARRAY_CNT(a)-1);
     int i = 0;
-    while (i < 5) {
+    while (i < ARRAY_CNT(a)) {
         PRINT_INT(a[i]);
         i = i + 1;
     }
-    PRINT_STR('CNT:');
-    PRINT_INT(ARRAY_CNT(a));
 }
-
-struct Lesson {
-    int price_;
-    int time_;
-};
-
-struct Student{
-    string id_;
-    Lesson[] lessons_;
-};
 
 int sort(int[] a, int left, int right) {
     if (left >= right) {

@@ -132,7 +132,7 @@ WHILE               TOKEN(WHILE)
 
 {sqbegin}   {
     BEGIN(sq);
-    ((ParseResult*)yyextra)->buf_ = std::stringstream{};
+    ((ParseResult*)yyextra)->buf_.clear();
 }
 
 <sq>{sqcontent} {

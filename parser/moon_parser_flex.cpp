@@ -1109,7 +1109,7 @@ YY_RULE_SETUP
 #line 133 "./moon.l"
 {
     BEGIN(sq);
-    ((ParseResult*)yyextra)->buf_ = std::stringstream{};
+    ((ParseResult*)yyextra)->buf_.clear();
 }
 	YY_BREAK
 case 37:

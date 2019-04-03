@@ -4,6 +4,7 @@
 #include "string"
 #include "assert.h"
 #include "syntax_tree.h"
+#include "string.h"
 
 enum INST_ENUM { LOC = 4017, LOA, LOV, STN, STO, JMP, CJMP, IND, ADD, SUB, MPI, DIV, GT, GTE, LTE, LT, EQ, NEQ, CALL, CALL_INNER, RET, ALC, DALC  } ;
 
@@ -17,13 +18,59 @@ static int FP = S_SIZE - 1;
 static int SP = S_SIZE - 1;
 static int IP = 0;
 
+/*
 int get_heap(unsigned int size, int** out) {
     static int i = 0;
     int ret = i;
     i += size + 1;
     *out = MEMORY_STACK + ret;
     return ret;
+}*/
+
+struct Header {
+    Header *next_;
+    unsigned int used_size_;
+    unsigned int free_size_;
+};
+static unsigned int HEAP_SIZE = S_SIZE / 2;
+static Header *memptr = nullptr;
+static unsigned int HEADER_SIZE_INT = (sizeof(Header)/sizeof(int));
+
+int get_heap(unsigned int size_int, int** out) {
+    if (!memptr) {
+        memptr = (Header*)MEMORY_STACK;
+        memptr->next_ = memptr;
+        memptr->used_size_ = 1;
+        memptr->free_size_ = HEAP_SIZE / HEADER_SIZE_INT;
+    }
+    unsigned int size_unit = (size_int - 1 + HEADER_SIZE_INT) / HEADER_SIZE_INT + 1;
+    Header *p = nullptr;
+    for (p = memptr; (p->next_ != memptr) && (p->free_size_ < size_unit); p = p->next_);
+    if (p->free_size_ < size_unit)
+        assert(false);      /* heap memory not enough error */
+    Header *newp = p + p->used_size_;
+    newp->used_size_ = size_unit;
+    newp->free_size_ = p->free_size_ - size_unit;
+    newp->next_ = p->next_;
+    p->free_size_ = 0;
+    p->next_ = newp;
+    memptr = newp;
+    *out = (int*)(newp+1);
+    return *out - MEMORY_STACK;
 }
+
+void free_heap(int pos) {
+    Header *free = (Header*)(MEMORY_STACK + pos) - 1;
+    Header *p = nullptr, *prev = nullptr;
+    for (p = memptr->next_, prev = memptr; (p != memptr)&&(p != free); prev = p, p = p->next_);
+    if (p != free)
+        return;  /* pos is not valid */
+    prev->free_size_ += p->free_size_ + p->used_size_;
+    prev->next_ = p->next_;
+    memptr = prev;
+}
+
+
 
 int* push_code(int inst1, int inst2) {
     static int i = 0;
@@ -484,7 +531,7 @@ bool load_insts(InstList *src) {
         }
         else { assert(false);   /* unreachable */ }
     }
-    dump_code();
+    //dump_code();
     printf("//////////////////////////////////////////////////\n\n");
     run();
 }

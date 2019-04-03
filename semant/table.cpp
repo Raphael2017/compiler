@@ -7,7 +7,7 @@
 #include "table.h"
 #include <stdlib.h>
 #include <assert.h>
-#include "stdint-gcc.h"
+#include "stdint.h"
 
 #define TABSIZE 127
 

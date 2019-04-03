@@ -860,6 +860,13 @@ LAB  L13 :
           RET
 
 
+struct Header {
+    Header *next_;
+    unsigned int used_size_;
+    unsigned int free_size_;
+};
+
+
 
 
 
