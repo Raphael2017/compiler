@@ -1,5 +1,5 @@
 int main() {
-    int[] a = int[] {1,28,2,199,1,0};
+    int[] a = generate_int_array();
     sort(a, 0, ARRAY_CNT(a)-1);
     int i = 0;
     while (i < ARRAY_CNT(a)) {
@@ -29,5 +29,9 @@ int sort(int[] a, int left, int right) {
     sort(a, left, i-1);
     sort(a, i+1, right);
     return 0;
+}
+
+int[] generate_int_array() {
+    return int[] {1,28,2,199,1,-1};
 }
 

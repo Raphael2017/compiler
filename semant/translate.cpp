@@ -652,6 +652,10 @@ TypeInfo* translate_left(bool flag/* false means value */, Frame *f, TAB_table_ 
             }
             sprintf(buf, "          %-5s", "ADD");
             insert_insts_list(buf);
+            sprintf(buf, "          %-5s%d", "LOC", 1);
+            insert_insts_list(buf);
+            sprintf(buf, "          %-5s", "ADD");
+            insert_insts_list(buf);
             if (!flag) {
                 sprintf(buf, "          %-5s%d", "IND", 0);
                 insert_insts_list(buf);
@@ -675,6 +679,10 @@ TypeInfo* translate_left(bool flag/* false means value */, Frame *f, TAB_table_ 
                 assert(false);  /* field reference of struct type not exist */
             }
             sprintf(buf, "          %-5s%d", "LOC", i);
+            insert_insts_list(buf);
+            sprintf(buf, "          %-5s", "ADD");
+            insert_insts_list(buf);
+            sprintf(buf, "          %-5s%d", "LOC", 1);
             insert_insts_list(buf);
             sprintf(buf, "          %-5s", "ADD");
             insert_insts_list(buf);

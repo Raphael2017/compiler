@@ -222,7 +222,7 @@ break_stmt:
     BREAK				{ $$ = make_break_stmt(); }
 
 left_value:
-    IDENTIFIER	%prec MINUS		{ $$ = make_simple_left_value($1); }
+    IDENTIFIER				{ $$ = make_simple_left_value($1); }
   | left_value '.' IDENTIFIER		{ $$ = make_struct_field_left_value($1, $3); }
   | left_value '[' expression ']'	{ $$ = make_array_index_left_value($1, $3); }
 ;

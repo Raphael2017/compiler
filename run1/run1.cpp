@@ -31,6 +31,7 @@ struct Header {
     Header *next_;
     unsigned int used_size_;
     unsigned int free_size_;
+    unsigned int flag_;         /* for gc */
 };
 static unsigned int HEAP_SIZE = S_SIZE / 2;
 static Header *memptr = nullptr;
@@ -56,7 +57,8 @@ int get_heap(unsigned int size_int, int** out) {
     p->next_ = newp;
     memptr = newp;
     *out = (int*)(newp+1);
-    return *out - MEMORY_STACK;
+    int ret =  *out - MEMORY_STACK;
+    return ret;
 }
 
 void free_heap(int pos) {
@@ -328,7 +330,7 @@ void run() {
                             out[1+i] = pop_stack();
                         }
                         pop_stack();
-                        push_stack(ret+1);
+                        push_stack(ret);
                     } break;
                     case -1: {  // print_int
                         pop_stack();
@@ -346,7 +348,7 @@ void run() {
                     case -3: {  // array_cnt
                         pop_stack();
                         int pos = pop_stack();
-                        int ant = mem_stack(pos - 1);
+                        int ant = mem_stack(pos);
                         pop_stack();
                         push_stack(ant);
                     } break;
