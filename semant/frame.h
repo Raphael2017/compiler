@@ -8,6 +8,7 @@ struct TypeInfo;
 
 struct Access {
     int offset_;
+    bool is_ref_;
     Frame *frame_;
 };
 
@@ -26,7 +27,7 @@ struct Frame {
     int max_local_count_;
 };
 
-Access* make_access(int offset, Frame *frame);
+Access* make_access(int offset, Frame *frame, bool is_ref);
 
 AccessList* make_access_list(Access *access, AccessList *next);
 
@@ -34,7 +35,7 @@ Frame* make_frame(TypeInfo *type);
 
 Frame* make_global_frame();
 
-Access* alloc_local(Frame *frame);
+Access* alloc_local(Frame *frame, TypeInfo *type);
 
 void dealloc_local(Access* access);
 

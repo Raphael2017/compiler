@@ -80,3 +80,43 @@ TypeFieldTypeInfo* make_field_type_info(Symbol *field, TypeInfo *type) {
     ret->field_type_ = type;
     return ret;
 }
+
+TypeInfo* actural_type(TypeInfo *type) {
+    if (type->kind_ == TypeInfo::NAMED) {
+        return actural_type(type->u.named_.type_info_);
+    }
+    else {
+        return type;
+    }
+}
+
+bool TypeInfoEqual(TypeInfo *type1, TypeInfo *type2) {
+    type1 = actural_type(type1);
+    type2 = actural_type(type2);
+    if (type1 == type2)
+        return true;
+    else if (type1->kind_ == TypeInfo::ARRAY && type2->kind_ == TypeInfo::ARRAY) {
+        return TypeInfoEqual(type1->u.array_elem_, type2->u.array_elem_);
+    }
+    else if (type1->kind_ == TypeInfo::ARRAY || type1->kind_ == TypeInfo::STRUCT) {
+        return type2->kind_ == TypeInfo::VOID;
+    }
+    else if (type2->kind_ == TypeInfo::ARRAY || type2->kind_ == TypeInfo::STRUCT) {
+        return type1->kind_ == TypeInfo::VOID;
+    }
+    return false;
+}
+
+bool is_ref(TypeInfo *type) {
+    if (!type) return true;
+    type = actural_type(type);
+    bool ret = true;
+    switch (type->kind_) {
+        case TypeInfo::INT:
+        case TypeInfo::VOID:
+            ret = false;
+        default:
+            ret;
+    }
+    return ret;
+}

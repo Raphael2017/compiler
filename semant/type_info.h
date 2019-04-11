@@ -64,4 +64,10 @@ TypeFieldTypeInfoList* make_field_type_info_list(TypeFieldTypeInfo *h, TypeField
 
 TypeFieldTypeInfo* make_field_type_info(Symbol *field, TypeInfo *type);
 
+TypeInfo* actural_type(TypeInfo *type);
+
+bool TypeInfoEqual(TypeInfo *type1, TypeInfo *type2);
+
+bool is_ref(TypeInfo *type);
+
 #endif

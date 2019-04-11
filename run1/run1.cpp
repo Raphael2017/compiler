@@ -84,6 +84,14 @@ int* push_code(int inst1, int inst2) {
     return (int*)(MEMORY_CODE + i);
 }
 
+void alc_stack(int i) {
+    SP -= i;
+}
+
+void dalc_stack(int i) {
+    SP += i;
+}
+
 void push_stack(int a) {
     MEMORY_STACK[--SP] = a;
 }
@@ -364,21 +372,26 @@ void run() {
                 int old_ip = pop_stack();
                 int cnt = pop_stack();
                 int top = top_stack();
+                /*
                 for (int i = 0; i < cnt; ++i) {
                     pop_stack();
-                }
+                }*/
+                dalc_stack(cnt);
                 FP = old_fp;
                 IP = old_ip-1;
             } break;
             case ALC: {
+                /*
                 for (int i = 0; i < it[1]; ++i) {
                     push_stack(0);
-                }
+                }*/
+                alc_stack(it[1]);
             } break;
             case DALC: {
-                for (int i = 0; i < it[1]; ++i) {
+                /*for (int i = 0; i < it[1]; ++i) {
                     pop_stack();
-                }
+                }*/
+                dalc_stack(it[1]);
             } break;
             default:{
                 assert(false);
@@ -499,10 +512,16 @@ bool load_insts(InstList *src) {
             t = push_code(RET, 0); ++line;
         }
         else if (inst == "ALC") {
-            t = push_code(ALC, atoi(inst1.c_str())); ++line;
+            int m = atoi(inst1.c_str());
+            if (m > 0) {
+                t = push_code(ALC, m); ++line;
+            }
         }
         else if (inst == "DALC") {
-            t = push_code(DALC, atoi(inst1.c_str())); ++line;
+            int m = atoi(inst1.c_str());
+            if (m > 0) {
+                t = push_code(DALC, atoi(inst1.c_str())); ++line;
+            }
         }
         else if (inst == "LAB" || inst == "FLAB") {
             Symbol *sym = make_symbol(inst1.c_str());

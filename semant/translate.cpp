@@ -1,4 +1,4 @@
-//#include <assert.h>
+#include <assert.h>
 #include <syntax_tree.h>
 #include "translate.h"
 #include "frame.h"
@@ -24,11 +24,6 @@ struct TranslateExp {
     void* exp_;
 };
 
-void assert(bool a) {
-    if (!a) {
-        printf("123");
-    }
-}
 
 InstList *g_insts = nullptr;
 InstList *g_insts_it = nullptr;
@@ -112,31 +107,7 @@ void dump_insts() {
     }
 }
 
-TypeInfo* actural_type(TypeInfo *type) {
-    if (type->kind_ == TypeInfo::NAMED) {
-        return actural_type(type->u.named_.type_info_);
-    }
-    else {
-        return type;
-    }
-}
 
-bool TypeInfoEqual(TypeInfo *type1, TypeInfo *type2) {
-    type1 = actural_type(type1);
-    type2 = actural_type(type2);
-    if (type1 == type2)
-        return true;
-    else if (type1->kind_ == TypeInfo::ARRAY && type2->kind_ == TypeInfo::ARRAY) {
-        return TypeInfoEqual(type1->u.array_elem_, type2->u.array_elem_);
-    }
-    else if (type1->kind_ == TypeInfo::ARRAY || type1->kind_ == TypeInfo::STRUCT) {
-        return type2->kind_ == TypeInfo::VOID;
-    }
-    else if (type2->kind_ == TypeInfo::ARRAY || type2->kind_ == TypeInfo::STRUCT) {
-        return type1->kind_ == TypeInfo::VOID;
-    }
-    return false;
-}
 void access_local_or_global(Access* ac, bool flag/* false means value */);
 SyntaxExpsList* params_list_reverse(SyntaxExpsList *exps);
 TypeInfoList* param_types_list_reverse(TypeInfoList* tps);
@@ -277,7 +248,7 @@ void translate1(TranslateLevel *level, Frame *f, TAB_table_ *type_env, TAB_table
                         assert(false);  /* Assign with type conflict error */
                     }
                 }
-                S_enter(var_env, var, make_var_entry(type, alloc_local(f), level));
+                S_enter(var_env, var, make_var_entry(type, alloc_local(f, type), level));
                 if (init_expr) {
                     Entry *entry = (Entry*)S_look(var_env, var);
                     assert(entry->kind_ == Entry::VAR);
@@ -435,7 +406,7 @@ void translate_exp(bool flag/* false means value */, Frame *f, TAB_table_ *type_
                 }
             }
             else {
-                for (it_exp = params,it_tp = param_types, i = 0; it_exp&&it_exp; it_exp = it_exp->next_, it_tp = it_tp->next_,++i) {
+                for (it_exp = params,it_tp = param_types, i = 0; it_exp&&it_tp; it_exp = it_exp->next_, it_tp = it_tp->next_,++i) {
                     TranslateExp *tmp = nullptr;
                     translate_exp(false, f, type_env, var_env, brk, it_exp->expr_, &tmp);
                     if (!TypeInfoEqual(it_tp->type_info_, tmp->type_) ) {
@@ -895,7 +866,7 @@ void translate_global_var_decl_stmts(TAB_table_ *type_env, TAB_table_ *var_env, 
                 assert(false);  /*  Type conflict error */
             }
         }
-        S_enter(var_env, var, make_var_entry(type, alloc_local(global_frame), nullptr));
+        S_enter(var_env, var, make_var_entry(type, alloc_local(global_frame, type), nullptr));
         if (init_expr) {
             Entry * entry = (Entry*)S_look(var_env, var);
             assert(entry && entry->kind_ == Entry::VAR);
@@ -945,6 +916,7 @@ void access_local_or_global(Access* ac, bool flag/* false means value */) {
         insert_insts_list(buf);
         if (!flag) {
             sprintf(buf, "          %-5s", "IND");
+            insert_insts_list(buf);
         }
     }
     else {

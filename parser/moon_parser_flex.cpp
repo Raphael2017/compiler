@@ -535,7 +535,7 @@ static const flex_int16_t yy_chk[268] =
 #define yymore() yymore_used_but_not_detected
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
-#line 1 "./moon.l"
+#line 1 "moon.l"
 /**
  * lexer
  *
@@ -544,7 +544,7 @@ static const flex_int16_t yy_chk[268] =
 /***************************
  ** Section 1: Definitions
  ***************************/
-#line 12 "./moon.l"
+#line 12 "moon.l"
 
 #include "syntax_tree.h"
 #include "moon_parser_bison.h"
@@ -867,7 +867,7 @@ YY_DECL
 		}
 
 	{
-#line 85 "./moon.l"
+#line 85 "moon.l"
 
 #line 873 "moon_parser_flex.cpp"
 
@@ -924,72 +924,72 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 86 "./moon.l"
+#line 86 "moon.l"
 TOKEN(BREAK)
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 87 "./moon.l"
+#line 87 "moon.l"
 TOKEN(ELSE)
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 88 "./moon.l"
+#line 88 "moon.l"
 TOKEN(FALSE)
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 89 "./moon.l"
+#line 89 "moon.l"
 TOKEN(IF)
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 90 "./moon.l"
+#line 90 "moon.l"
 TOKEN(INT)
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 91 "./moon.l"
+#line 91 "moon.l"
 TOKEN(NIL)
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 92 "./moon.l"
+#line 92 "moon.l"
 TOKEN(RETURN)
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 93 "./moon.l"
+#line 93 "moon.l"
 TOKEN(STRING_)
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 94 "./moon.l"
+#line 94 "moon.l"
 TOKEN(STRUCT)
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 95 "./moon.l"
+#line 95 "moon.l"
 TOKEN(TRUE)
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 96 "./moon.l"
+#line 96 "moon.l"
 TOKEN(TYPEDEF)
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 97 "./moon.l"
+#line 97 "moon.l"
 TOKEN(VOID)
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 98 "./moon.l"
+#line 98 "moon.l"
 TOKEN(WHILE)
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 100 "./moon.l"
+#line 100 "moon.l"
 {
     yylval->ival = atoi(yytext);
     return INTNUM;
@@ -997,7 +997,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 105 "./moon.l"
+#line 105 "moon.l"
 {
     yylval->symbol = make_symbol(yytext);
 	return IDENTIFIER;
@@ -1005,124 +1005,124 @@ YY_RULE_SETUP
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 110 "./moon.l"
+#line 110 "moon.l"
 { /* ignore */ }
 	YY_BREAK
 case 17:
 /* rule 17 can match eol */
 YY_RULE_SETUP
-#line 111 "./moon.l"
+#line 111 "moon.l"
 { /* ignore */ }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 113 "./moon.l"
+#line 113 "moon.l"
 { return yytext[0];}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 114 "./moon.l"
+#line 114 "moon.l"
 { return yytext[0]; }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 115 "./moon.l"
+#line 115 "moon.l"
 { return yytext[0]; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 116 "./moon.l"
+#line 116 "moon.l"
 { return yytext[0]; }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 117 "./moon.l"
+#line 117 "moon.l"
 { return yytext[0]; }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 118 "./moon.l"
+#line 118 "moon.l"
 { return yytext[0]; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 119 "./moon.l"
+#line 119 "moon.l"
 { return PLUS;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 120 "./moon.l"
+#line 120 "moon.l"
 { return TIMES; }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 121 "./moon.l"
+#line 121 "moon.l"
 { return DIVIDE; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 122 "./moon.l"
+#line 122 "moon.l"
 {return MINUS;}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 123 "./moon.l"
+#line 123 "moon.l"
 {return EQ;}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 124 "./moon.l"
+#line 124 "moon.l"
 {return NEQ;}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 125 "./moon.l"
+#line 125 "moon.l"
 {return LT;}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 126 "./moon.l"
+#line 126 "moon.l"
 {return LE;}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 127 "./moon.l"
+#line 127 "moon.l"
 {return GT;}
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 128 "./moon.l"
+#line 128 "moon.l"
 {return GE;}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 129 "./moon.l"
+#line 129 "moon.l"
 {return AND;}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 130 "./moon.l"
+#line 130 "moon.l"
 {return OR;}
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 133 "./moon.l"
+#line 133 "moon.l"
 {
     BEGIN(sq);
-    ((ParseResult*)yyextra)->buf_.clear();
+    ((ParseResult*)yyextra)->buf_ = std::stringstream{};
 }
 	YY_BREAK
 case 37:
 /* rule 37 can match eol */
 YY_RULE_SETUP
-#line 138 "./moon.l"
+#line 138 "moon.l"
 {
     ((ParseResult*)yyextra)->buf_ << yytext;
 }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 142 "./moon.l"
+#line 142 "moon.l"
 {
     BEGIN(INITIAL);
     yylval->sval = strdup(((ParseResult*)yyextra)->buf_.str().c_str());
@@ -1133,12 +1133,12 @@ case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(hint):
 case YY_STATE_EOF(sq):
 case YY_STATE_EOF(sb):
-#line 148 "./moon.l"
+#line 148 "moon.l"
 { return END_P; }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 150 "./moon.l"
+#line 150 "moon.l"
 {
     fprintf(stderr, "[MOON-Lexer-Error] Unknown Character: %c\n", yytext[0]);
     return ERROR;
@@ -1146,7 +1146,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 154 "./moon.l"
+#line 154 "moon.l"
 ECHO;
 	YY_BREAK
 #line 1153 "moon_parser_flex.cpp"
@@ -2303,7 +2303,7 @@ void yyfree (void * ptr , yyscan_t yyscanner)
 
 #define YYTABLES_NAME "yytables"
 
-#line 154 "./moon.l"
+#line 154 "moon.l"
 
 /***************************
  ** Section 3: User code

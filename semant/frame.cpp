@@ -2,10 +2,11 @@
 #include "type_info.h"
 #include "assert.h"
 
-Access* make_access(int offset, Frame *frame) {
+Access* make_access(int offset, Frame *frame, bool is_ref) {
     Access *ret = new Access;
     ret->offset_ = offset;
     ret->frame_ = frame;
+    ret->is_ref_ = is_ref;
     return ret;
 }
 
@@ -27,17 +28,17 @@ Frame* make_frame(TypeInfo *type) {
     int i = 0;
     for (TypeInfoList *it = type->u.func_proto.params_; it; ++i, it = it->next_) {
         if (0 == i) {
-            access_list = make_access_list(make_access(4+i, ret), nullptr);
+            access_list = make_access_list(make_access(4+i, ret, is_ref(it->type_info_)), nullptr);
             access_list_head = access_list;
         }
         else
         {
-            access_list->next_ = make_access_list(make_access(4+i, ret), nullptr);
+            access_list->next_ = make_access_list(make_access(4+i, ret, is_ref(it->type_info_)), nullptr);
             access_list = access_list->next_;
         }
     }
     ret->access_list_ = access_list_head;
-    ret->result_ = make_access(4+i, ret);
+    ret->result_ = make_access(4+i, ret, is_ref(type->u.func_proto.result_));
     ret->cur_local_count_ = 0;
     ret->max_local_count_ = 0;
     ret->is_global_ = false;
@@ -54,11 +55,11 @@ Frame* make_global_frame() {
     return ret;
 }
 
-Access* alloc_local(Frame *frame) {
+Access* alloc_local(Frame *frame, TypeInfo *type) {
     frame->cur_local_count_++;
     if (frame->max_local_count_ < frame->cur_local_count_)
         frame->max_local_count_ = frame->cur_local_count_;
-    Access *ret = make_access(-frame->cur_local_count_, frame);
+    Access *ret = make_access(-frame->cur_local_count_, frame, is_ref(type));
     return ret;
 }
 
